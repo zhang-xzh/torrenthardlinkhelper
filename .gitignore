@@ -98,3 +98,4 @@ _vti_pvt/
 #Ignore private folder
 /Private/
 /.vs
+/.idea
