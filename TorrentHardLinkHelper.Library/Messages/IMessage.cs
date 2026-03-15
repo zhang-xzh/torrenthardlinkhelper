@@ -1,12 +1,11 @@
-﻿namespace TorrentHardLinkHelper.Messages
+﻿namespace TorrentHardLinkHelper.Messages;
+
+internal interface IMessage
 {
-    interface IMessage
-    {
-        int ByteLength { get; }
+    int ByteLength { get; }
 
-        byte[] Encode();
-        int Encode(byte[] buffer, int offset);
+    byte[] Encode();
+    int Encode(byte[] buffer, int offset);
 
-        void Decode(byte[] buffer, int offset, int length);
-    }
+    void Decode(byte[] buffer, int offset, int length);
 }

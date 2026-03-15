@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿namespace TorrentHardLinkHelper.Locate;
 
-namespace TorrentHardLinkHelper.Locate
+public enum LocateState
 {
-    public enum LocateState
-    {
-        Succeed,
-        Fail
-    }
+    Succeed,
+    Fail
 }

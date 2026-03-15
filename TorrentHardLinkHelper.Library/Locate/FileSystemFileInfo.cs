@@ -1,53 +1,31 @@
 ﻿using System.IO;
 
-namespace TorrentHardLinkHelper.Locate
+namespace TorrentHardLinkHelper.Locate;
+
+public class FileSystemFileInfo
 {
-    public class FileSystemFileInfo
+    public FileSystemFileInfo()
     {
-        private string _fileName;
-        private string _filePath;
-        private long _length;
-        private bool _located;
+        Located = false;
+    }
 
-        public FileSystemFileInfo()
-        {
-            this._located = false;
-        }
+    public FileSystemFileInfo(FileInfo fileInfo)
+    {
+        FileName = fileInfo.Name;
+        FilePath = fileInfo.FullName;
+        Length = fileInfo.Length;
+    }
 
-        public FileSystemFileInfo(FileInfo fileInfo)
-        {
-            this._fileName = fileInfo.Name;
-            this._filePath = fileInfo.FullName;
-            this._length = fileInfo.Length;
-        }
+    public string FileName { get; internal set; }
 
-        public string FileName
-        {
-            get { return this._fileName; }
-            internal set { this._fileName = value; }
-        }
+    public string FilePath { get; internal set; }
 
-        public string FilePath
-        {
-            get { return this._filePath; }
-            internal set { this._filePath = value; }
-        }
+    public long Length { get; internal set; }
 
-        public long Length
-        {
-            get { return this._length; }
-            internal set { this._length = value; }
-        }
+    public bool Located { get; set; }
 
-        public bool Located
-        {
-            get { return this._located; }
-            set { this._located = value; }
-        }
-
-        public override string ToString()
-        {
-            return this._filePath + ", length: " + this._length;
-        }
+    public override string ToString()
+    {
+        return FilePath + ", length: " + Length;
     }
 }

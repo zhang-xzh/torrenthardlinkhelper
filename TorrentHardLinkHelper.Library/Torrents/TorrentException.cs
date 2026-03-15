@@ -7,30 +7,29 @@
 // Copyright (C) 2006 Alan McGovern
 
 using System;
+using System.Runtime.Serialization;
 
-namespace TorrentHardLinkHelper.Torrents
+namespace TorrentHardLinkHelper.Torrents;
+
+[Serializable]
+public class TorrentException : Exception
 {
-    [Serializable]
-    public class TorrentException : Exception
+    public TorrentException()
     {
-        public TorrentException()
-            : base()
-        {
-        }
+    }
 
-        public TorrentException(string message)
-            : base(message)
-        {
-        }
+    public TorrentException(string message)
+        : base(message)
+    {
+    }
 
-        public TorrentException(string message, Exception innerException)
-            : base(message, innerException)
-        {
-        }
+    public TorrentException(string message, Exception innerException)
+        : base(message, innerException)
+    {
+    }
 
-        public TorrentException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
-            : base(info, context)
-        {
-        }
+    public TorrentException(SerializationInfo info, StreamingContext context)
+        : base(info, context)
+    {
     }
 }

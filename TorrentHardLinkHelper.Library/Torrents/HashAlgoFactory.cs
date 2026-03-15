@@ -12,40 +12,41 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using TorrentHardLinkHelper.Common;
 
-namespace TorrentHardLinkHelper.Torrents
+namespace TorrentHardLinkHelper.Torrents;
+
+public static class HashAlgoFactory
 {
-    public static class HashAlgoFactory
+    private static readonly Dictionary<Type, Type> algos = new();
+
+    static HashAlgoFactory()
     {
-        static Dictionary<Type, Type> algos = new Dictionary<Type, Type>();
+        Register<MD5, MD5CryptoServiceProvider>();
+        Register<SHA1, SHA1CryptoServiceProvider>();
+    }
 
-        static HashAlgoFactory()
+    public static void Register<T, U>()
+        where T : HashAlgorithm
+        where U : HashAlgorithm
+    {
+        Register(typeof(T), typeof(U));
+    }
+
+    public static void Register(Type baseType, Type specificType)
+    {
+        Check.BaseType(baseType);
+        Check.SpecificType(specificType);
+
+        lock (algos)
         {
-            Register<MD5, MD5CryptoServiceProvider>();
-            Register<SHA1, SHA1CryptoServiceProvider>();
+            algos[baseType] = specificType;
         }
+    }
 
-        public static void Register<T, U>()
-            where T : HashAlgorithm
-            where U : HashAlgorithm
-        {
-            Register(typeof(T), typeof(U));
-        }
-
-        public static void Register(Type baseType, Type specificType)
-        {
-            Check.BaseType(baseType);
-            Check.SpecificType(specificType);
-
-            lock (algos)
-                algos[baseType] = specificType;
-        }
-
-        public static T Create<T>()
-            where T : HashAlgorithm
-        {
-            if (algos.ContainsKey(typeof(T)))
-                return (T)Activator.CreateInstance(algos[typeof(T)]);
-            return null;
-        }
+    public static T Create<T>()
+        where T : HashAlgorithm
+    {
+        if (algos.ContainsKey(typeof(T)))
+            return (T)Activator.CreateInstance(algos[typeof(T)]);
+        return null;
     }
 }

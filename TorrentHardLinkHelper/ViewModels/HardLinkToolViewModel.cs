@@ -5,139 +5,107 @@ using CommunityToolkit.Mvvm.Input;
 using Ookii.Dialogs.Wpf;
 using TorrentHardLinkHelper.HardLink;
 
-namespace TorrentHardLinkHelper.ViewModels
+namespace TorrentHardLinkHelper.ViewModels;
+
+public class HardLinkToolViewModel : ObservableObject
 {
-    public class HardLinkToolViewModel : ObservableObject
+    private string _folderName;
+    private string _parentFolder;
+
+    private string _sourceFolder;
+
+    public HardLinkToolViewModel()
     {
-        private string _sourceFolder;
-        private string _parentFolder;
-        private string _folderName;
+        InitCommands();
+    }
 
-        private RelayCommand _selectSourceFolderCommand;
-        private RelayCommand _selectParentFolderCommand;
-        private RelayCommand _defaultCommand;
-        private RelayCommand _linkCommand;
-
-        public HardLinkToolViewModel()
+    public string SourceFolder
+    {
+        get => _sourceFolder;
+        set
         {
-            this.InitCommands();
+            if (SetProperty(ref _sourceFolder, value)) LinkCommand.NotifyCanExecuteChanged();
         }
+    }
 
-        public void InitCommands()
+    public string ParentFolder
+    {
+        get => _parentFolder;
+        set
         {
-            this._selectSourceFolderCommand = new RelayCommand(SelectSourceFolder);
-
-            this._selectParentFolderCommand = new RelayCommand(SelectParentFolder);
-
-            this._defaultCommand = new RelayCommand(Default);
-
-            this._linkCommand = new RelayCommand(Link, CanLink);
+            if (SetProperty(ref _parentFolder, value)) LinkCommand.NotifyCanExecuteChanged();
         }
+    }
 
-        private void SelectSourceFolder()
+    public string FolderName
+    {
+        get => _folderName;
+        set
         {
-            var dialog = new VistaFolderBrowserDialog();
-            dialog.ShowNewFolderButton = true;
-            dialog.ShowDialog();
-            if (!string.IsNullOrWhiteSpace(dialog.SelectedPath))
-            {
-                SourceFolder = dialog.SelectedPath;
-                ParentFolder = Directory.GetParent(dialog.SelectedPath).FullName;
-                FolderName = Path.GetFileName(dialog.SelectedPath) + "_Copy";
-            }
+            if (SetProperty(ref _folderName, value)) LinkCommand.NotifyCanExecuteChanged();
         }
+    }
 
-        private void SelectParentFolder()
-        {
-            var dialog = new VistaFolderBrowserDialog();
-            dialog.ShowNewFolderButton = true;
-            dialog.ShowDialog();
-            if (dialog.SelectedPath != null)
-            {
-                ParentFolder = dialog.SelectedPath;
-            }
-        }
+    public RelayCommand SelectSourceFolderCommand { get; private set; }
 
-        private void Default()
-        {
-            if (string.IsNullOrWhiteSpace(_sourceFolder))
-            {
-                FolderName = "";
-            }
-            else
-            {
-                FolderName = Path.GetDirectoryName(_folderName) + "_HLinked";
-            }
-        }
+    public RelayCommand SelectParentFolderCommand { get; private set; }
 
-        private void Link()
-        {
-            var helper = new HardLinkHelper();
-            helper.HardLink(_sourceFolder, _parentFolder, _folderName, 1024000);
-            Process.Start("explorer.exe", Path.Combine(_parentFolder, _folderName));
-        }
+    public RelayCommand DefaultCommand { get; private set; }
 
-        private bool CanLink()
-        {
-            return !string.IsNullOrWhiteSpace(_sourceFolder) && 
-                   !string.IsNullOrWhiteSpace(_parentFolder) && 
-                   !string.IsNullOrWhiteSpace(_folderName);
-        }
+    public RelayCommand LinkCommand { get; private set; }
 
-        public string SourceFolder
-        {
-            get { return _sourceFolder; }
-            set 
-            { 
-                if (SetProperty(ref _sourceFolder, value))
-                {
-                    _linkCommand.NotifyCanExecuteChanged();
-                }
-            }
-        }
+    public void InitCommands()
+    {
+        SelectSourceFolderCommand = new RelayCommand(SelectSourceFolder);
 
-        public string ParentFolder
-        {
-            get { return _parentFolder; }
-            set 
-            { 
-                if (SetProperty(ref _parentFolder, value))
-                {
-                    _linkCommand.NotifyCanExecuteChanged();
-                }
-            }
-        }
+        SelectParentFolderCommand = new RelayCommand(SelectParentFolder);
 
-        public string FolderName
-        {
-            get { return _folderName; }
-            set 
-            { 
-                if (SetProperty(ref _folderName, value))
-                {
-                    _linkCommand.NotifyCanExecuteChanged();
-                }
-            }
-        }
+        DefaultCommand = new RelayCommand(Default);
 
-        public RelayCommand SelectSourceFolderCommand
-        {
-            get { return _selectSourceFolderCommand; }
-        }
+        LinkCommand = new RelayCommand(Link, CanLink);
+    }
 
-        public RelayCommand SelectParentFolderCommand
+    private void SelectSourceFolder()
+    {
+        var dialog = new VistaFolderBrowserDialog();
+        dialog.ShowNewFolderButton = true;
+        var result = dialog.ShowDialog();
+        if (result == true && !string.IsNullOrWhiteSpace(dialog.SelectedPath))
         {
-            get { return _selectParentFolderCommand; }
+            SourceFolder = dialog.SelectedPath;
+            var parent = Directory.GetParent(dialog.SelectedPath);
+            if (parent != null) ParentFolder = parent.FullName;
+            FolderName = Path.GetFileName(dialog.SelectedPath) + "_Copy";
         }
+    }
 
-        public RelayCommand DefaultCommand
-        {
-            get { return _defaultCommand; }
-        }
+    private void SelectParentFolder()
+    {
+        var dialog = new VistaFolderBrowserDialog();
+        dialog.ShowNewFolderButton = true;
+        dialog.ShowDialog();
+        if (dialog.SelectedPath != null) ParentFolder = dialog.SelectedPath;
+    }
 
-        public RelayCommand LinkCommand
-        {
-            get { return _linkCommand; }
-        }
+    private void Default()
+    {
+        if (string.IsNullOrWhiteSpace(_sourceFolder))
+            FolderName = "";
+        else
+            FolderName = Path.GetFileName(_sourceFolder) + "_HLinked";
+    }
+
+    private void Link()
+    {
+        var helper = new HardLinkHelper();
+        helper.HardLink(_sourceFolder, _parentFolder, _folderName, 1024000);
+        Process.Start("explorer.exe", Path.Combine(_parentFolder, _folderName));
+    }
+
+    private bool CanLink()
+    {
+        return !string.IsNullOrWhiteSpace(_sourceFolder) &&
+               !string.IsNullOrWhiteSpace(_parentFolder) &&
+               !string.IsNullOrWhiteSpace(_folderName);
     }
 }

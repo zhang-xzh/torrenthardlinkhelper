@@ -1,361 +1,303 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using TorrentHardLinkHelper.Locate;
 
-namespace TorrentHardLinkHelper.HardLink
+namespace TorrentHardLinkHelper.HardLink;
+
+public class HardLinkHelper
 {
-    public class HardLinkHelper
+    private StringBuilder _builder;
+
+    private List<string> _createdFolders;
+
+    // Windows API for creating hard links
+    [DllImport("Kernel32.dll", CharSet = CharSet.Unicode)]
+    private static extern bool CreateHardLink(string lpFileName, string lpExistingFileName, IntPtr lpSecurityAttributes);
+
+    public void HardLink(string sourceFolder, string targetParentFolder, string folderName, int copyLimitSize)
     {
-        private StringBuilder _builder;
-        private List<string> _createdFolders;
+        _builder = new StringBuilder();
+        _builder.AppendLine("chcp 65001");
+        _builder.AppendLine("::==============================================::");
+        _builder.AppendLine(":: Torrent Hard-Link Helper - HardLink Script");
+        _builder.AppendLine("::");
+        _builder.AppendLine(":: Created at " + DateTime.Now);
+        _builder.AppendLine("::==============================================::");
+        _builder.AppendLine("::.");
 
-        public void HardLink(string sourceFolder, string targetParentFolder, string folderName, int copyLimitSize)
+        var rootFolder = Path.Combine(targetParentFolder, folderName);
+        if (!Directory.Exists(rootFolder)) CreateFolder(rootFolder);
+        if (!Directory.Exists(targetParentFolder)) CreateFolder(targetParentFolder);
+        SearchFolder(sourceFolder, rootFolder, copyLimitSize);
+        var utf8bom = new UTF8Encoding(false);
+        File.WriteAllText(Path.Combine(rootFolder, "!hard-link.cmd"), _builder.ToString(), utf8bom);
+    }
+
+    private void SearchFolder(string folder, string targetParentFolder, int copyLimitSize)
+    {
+        if (_createdFolders == null) _createdFolders = new List<string>();
+        if (_createdFolders.Contains(folder)) return;
+        foreach (var file in Directory.GetFiles(folder))
         {
-
-            this._builder = new StringBuilder();
-            this._builder.AppendLine("chcp 65001");
-            this._builder.AppendLine("::==============================================::");
-            this._builder.AppendLine(":: Torrent Hard-Link Helper - HardLink Script");
-            this._builder.AppendLine("::");
-            this._builder.AppendLine(":: Created at " + DateTime.Now);
-            this._builder.AppendLine("::==============================================::");
-            this._builder.AppendLine("::.");
-
-            string rootFolder = Path.Combine(targetParentFolder, folderName);
-            if (!Directory.Exists(rootFolder))
-            {
-                CreateFolder(rootFolder);
-            }
-            if (!Directory.Exists(targetParentFolder))
-            {
-                CreateFolder(targetParentFolder);
-            }
-            this.SearchFolder(sourceFolder, rootFolder, copyLimitSize);
-            var utf8bom = new UTF8Encoding(false);
-            File.WriteAllText(Path.Combine(rootFolder, "!hard-link.cmd"), this._builder.ToString(), utf8bom);
+            var targetFile = Path.Combine(targetParentFolder, Path.GetFileName(file));
+            var fileInfo = new FileInfo(file);
+            if (fileInfo.Length >= copyLimitSize)
+                CreateHarkLink(file, targetFile);
+            else
+                Copy(file, targetFile);
         }
 
-        private void SearchFolder(string folder, string targetParentFolder, int copyLimitSize)
+        foreach (var subFolder in Directory.GetDirectories(folder))
         {
-            if (this._createdFolders == null)
+            var targetSubFolder = Path.Combine(targetParentFolder, Path.GetFileName(subFolder));
+            if (!Directory.Exists(targetSubFolder))
             {
-                this._createdFolders = new List<string>();
-            }
-            if (this._createdFolders.Contains(folder))
-            {
-                return;
-            }
-            foreach (var file in Directory.GetFiles(folder))
-            {
-                string targetFile = Path.Combine(targetParentFolder, Path.GetFileName(file));
-                var fileInfo = new FileInfo(file);
-                if (fileInfo.Length >= copyLimitSize)
-                {
-                    CreateHarkLink(file, targetFile);
-                }
-                else
-                {
-                    Copy(file, targetFile);
-                }
-            }
-            foreach (var subFolder in Directory.GetDirectories(folder))
-            {
-                string targetSubFolder = Path.Combine(targetParentFolder, Path.GetFileName(subFolder));
-                if (!Directory.Exists(targetSubFolder))
-                {
-                    this.CreateFolder(targetSubFolder);
-                    this._createdFolders.Add(targetSubFolder);
-                }
-                SearchFolder(subFolder, targetSubFolder, copyLimitSize);
-            }
-        }
-
-        public void HardLink(IList<TorrentFileLink> links, int copyLimitSize, string folderName, string baseFolde)
-        {
-            string rootFolder = Path.Combine(baseFolde, folderName);
-
-            this._builder = new StringBuilder();
-            this._builder.AppendLine("chcp 65001");
-            this._builder.AppendLine("::==============================================::");
-            this._builder.AppendLine(":: Torrent Hard-Link Helper - HardLink Script");
-            this._builder.AppendLine("::");
-            this._builder.AppendLine(":: Created at " + DateTime.Now);
-            this._builder.AppendLine("::==============================================::");
-            this._builder.AppendLine("::.");
-            if (!Directory.Exists(rootFolder))
-            {
-                this.CreateFolder(rootFolder);
-            }
-            foreach (var link in links)
-            {
-                if (link.LinkedFsFileInfo == null)
-                {
-                    continue;
-                }
-                string[] pathParts = link.TorrentFile.Path.Split('\\');
-                for (int i = 0; i < pathParts.Length - 1; i++)
-                {
-                    var targetPathParts = new string[i + 2];
-                    targetPathParts[0] = rootFolder;
-                    Array.Copy(pathParts, 0, targetPathParts, 1, i + 1);
-                    string targetPath = Path.Combine(targetPathParts);
-                    if (!Directory.Exists(targetPath))
-                    {
-                        this.CreateFolder(targetPath);
-                    }
-                }
-                string targetFile = Path.Combine(rootFolder, link.TorrentFile.Path);
-
-                if (link.TorrentFile.Length >= copyLimitSize)
-                {
-                    CreateHarkLink(link.LinkedFsFileInfo.FilePath, targetFile);
-                }
-                else
-                {
-                    Copy(link.LinkedFsFileInfo.FilePath, targetFile);
-                }
-            }
-            File.WriteAllText(Path.Combine(rootFolder, "!hard-link.cmd"), this._builder.ToString(), Encoding.UTF8);
-        }
-
-        private void CreateHarkLink(string source, string target)
-        {
-            this._builder.AppendLine(string.Format("fsutil hardlink create \"{0}\" \"{1}\"", target, source));
-            var procStartInfo =
-                new ProcessStartInfo("cmd",
-                    "/c " + string.Format("fsutil hardlink create \"{0}\" \"{1}\"", target, source));
-
-            // The following commands are needed to redirect the standard output.
-            // This means that it will be redirected to the Process.StandardOutput StreamReader.
-            procStartInfo.RedirectStandardOutput = true;
-            procStartInfo.UseShellExecute = false;
-            // Do not create the black window.
-            procStartInfo.CreateNoWindow = true;
-            // Now we create a process, assign its ProcessStartInfo and start it
-            Process proc = new Process();
-            proc.StartInfo = procStartInfo;
-            proc.Start();
-        }
-
-        public void Copy(string source, string target)
-        {
-            this._builder.AppendLine(string.Format("copy /y \"{0}\" \"{1}\"", source, target));
-            var procStartInfo =
-                new ProcessStartInfo("cmd",
-                    "/c " + string.Format("copy /y \"{0}\" \"{1}\"", source, target));
-
-            // The following commands are needed to redirect the standard output.
-            // This means that it will be redirected to the Process.StandardOutput StreamReader.
-            procStartInfo.RedirectStandardOutput = true;
-            procStartInfo.UseShellExecute = false;
-            // Do not create the black window.
-            procStartInfo.CreateNoWindow = true;
-            // Now we create a process, assign its ProcessStartInfo and start it
-            Process proc = new Process();
-            proc.StartInfo = procStartInfo;
-            proc.Start();
-        }
-
-        private void CreateFolder(string path)
-        {
-            this._builder.AppendLine(string.Format("mkdir  \"{0}\"", path));
-            Directory.CreateDirectory(path);
-        }
-
-        public void GenerateLinuxSymlinkScript(IList<TorrentFileLink> links, string folderName, string baseFolder, string sourceFolder)
-        {
-            this._builder = new StringBuilder();
-            this._builder.AppendLine("#!/bin/bash");
-            this._builder.AppendLine("#==============================================");
-            this._builder.AppendLine("# Torrent Hard-Link Helper - Linux Symlink Script");
-            this._builder.AppendLine("#");
-            this._builder.AppendLine("# Created at " + DateTime.Now);
-            this._builder.AppendLine("#==============================================");
-            this._builder.AppendLine("");
-            this._builder.AppendLine("# Change to the script directory");
-            this._builder.AppendLine("cd \"$(dirname \"$0\")\"");
-            this._builder.AppendLine("");
-
-            // Create base folder
-            string linuxFolderName = ToLinuxPath(folderName);
-            this._builder.AppendLine(string.Format("mkdir -p \"{0}\"", linuxFolderName));
-            this._builder.AppendLine("");
-
-            // Track directories we've already added mkdir commands for
-            var createdLinuxDirs = new HashSet<string>();
-
-            foreach (var link in links)
-            {
-                if (link.LinkedFsFileInfo == null)
-                {
-                    continue;
-                }
-
-                // Create subdirectories inside base folder
-                string[] pathParts = link.TorrentFile.Path.Split('\\');
-                if (pathParts.Length > 1)
-                {
-                    string linuxDirPath = linuxFolderName + "/" + ToLinuxPath(string.Join("\\", pathParts, 0, pathParts.Length - 1));
-                    
-                    if (!createdLinuxDirs.Contains(linuxDirPath))
-                    {
-                        this._builder.AppendLine(string.Format("mkdir -p \"{0}\"", linuxDirPath));
-                        createdLinuxDirs.Add(linuxDirPath);
-                    }
-                }
-
-                // Calculate relative path from target location to source file
-                string linuxTargetPath = linuxFolderName + "/" + ToLinuxPath(link.TorrentFile.Path);
-                string relativePath = GetRelativeSourcePath(link.TorrentFile.Path, link.LinkedFsFileInfo.FilePath, sourceFolder);
-
-                this._builder.AppendLine(string.Format("ln -s \"{0}\" \"{1}\"", relativePath, linuxTargetPath));
+                CreateFolder(targetSubFolder);
+                _createdFolders.Add(targetSubFolder);
             }
 
-            var utf8nobom = new UTF8Encoding(false);
-            string scriptContent = this._builder.ToString().Replace("\r\n", "\n");
-            File.WriteAllText(Path.Combine(baseFolder, folderName + "_symlink.sh"), scriptContent, utf8nobom);
+            SearchFolder(subFolder, targetSubFolder, copyLimitSize);
         }
+    }
 
-        public void GenerateLinuxMoveScript(IList<TorrentFileLink> links, string folderName, string baseFolder, string sourceFolder)
+    public void HardLink(IList<TorrentFileLink> links, int copyLimitSize, string folderName, string baseFolde)
+    {
+        var rootFolder = Path.Combine(baseFolde, folderName);
+
+        _builder = new StringBuilder();
+        _builder.AppendLine("chcp 65001");
+        _builder.AppendLine("::==============================================::");
+        _builder.AppendLine(":: Torrent Hard-Link Helper - HardLink Script");
+        _builder.AppendLine("::");
+        _builder.AppendLine(":: Created at " + DateTime.Now);
+        _builder.AppendLine("::==============================================::");
+        _builder.AppendLine("::.");
+        if (!Directory.Exists(rootFolder)) CreateFolder(rootFolder);
+        foreach (var link in links)
         {
-            this._builder = new StringBuilder();
-            this._builder.AppendLine("#!/bin/bash");
-            this._builder.AppendLine("#==============================================");
-            this._builder.AppendLine("# Torrent Hard-Link Helper - Linux Move Script");
-            this._builder.AppendLine("#");
-            this._builder.AppendLine("# Created at " + DateTime.Now);
-            this._builder.AppendLine("#==============================================");
-            this._builder.AppendLine("");
-            this._builder.AppendLine("# Change to the script directory");
-            this._builder.AppendLine("cd \"$(dirname \"$0\")\"");
-            this._builder.AppendLine("");
-
-            // Create base folder
-            string linuxFolderName = ToLinuxPath(folderName);
-            this._builder.AppendLine(string.Format("mkdir -p \"{0}\"", linuxFolderName));
-            this._builder.AppendLine("");
-
-            // Track directories we've already added mkdir commands for
-            var createdLinuxDirs = new HashSet<string>();
-
-            foreach (var link in links)
+            if (link.LinkedFsFileInfo == null) continue;
+            var pathParts = link.TorrentFile.Path.Split('\\');
+            for (var i = 0; i < pathParts.Length - 1; i++)
             {
-                if (link.LinkedFsFileInfo == null)
-                {
-                    continue;
-                }
-
-                // Create subdirectories inside base folder
-                string[] pathParts = link.TorrentFile.Path.Split('\\');
-                if (pathParts.Length > 1)
-                {
-                    string linuxDirPath = linuxFolderName + "/" + ToLinuxPath(string.Join("\\", pathParts, 0, pathParts.Length - 1));
-                    
-                    if (!createdLinuxDirs.Contains(linuxDirPath))
-                    {
-                        this._builder.AppendLine(string.Format("mkdir -p \"{0}\"", linuxDirPath));
-                        createdLinuxDirs.Add(linuxDirPath);
-                    }
-                }
-
-                // Get source path relative to source folder
-                string sourceRelative = link.LinkedFsFileInfo.FilePath.Substring(sourceFolder.Length).TrimStart('\\');
-                string sourceFolderName = Path.GetFileName(sourceFolder);
-                string linuxSourcePath = sourceFolderName + "/" + ToLinuxPath(sourceRelative);
-                string linuxTargetPath = linuxFolderName + "/" + ToLinuxPath(link.TorrentFile.Path);
-
-                this._builder.AppendLine(string.Format("mv \"{0}\" \"{1}\"", linuxSourcePath, linuxTargetPath));
+                var targetPathParts = new string[i + 2];
+                targetPathParts[0] = rootFolder;
+                Array.Copy(pathParts, 0, targetPathParts, 1, i + 1);
+                var targetPath = Path.Combine(targetPathParts);
+                if (!Directory.Exists(targetPath)) CreateFolder(targetPath);
             }
 
-            var utf8nobom = new UTF8Encoding(false);
-            string scriptContent = this._builder.ToString().Replace("\r\n", "\n");
-            File.WriteAllText(Path.Combine(baseFolder, folderName + "_move.sh"), scriptContent, utf8nobom);
+            var targetFile = Path.Combine(rootFolder, link.TorrentFile.Path);
+
+            if (link.TorrentFile.Length >= copyLimitSize)
+                CreateHarkLink(link.LinkedFsFileInfo.FilePath, targetFile);
+            else
+                Copy(link.LinkedFsFileInfo.FilePath, targetFile);
         }
 
-        public void GenerateLinuxHardlinkScript(IList<TorrentFileLink> links, string folderName, string baseFolder, string sourceFolder)
+        File.WriteAllText(Path.Combine(rootFolder, "!hard-link.cmd"), _builder.ToString(), Encoding.UTF8);
+    }
+
+    private void CreateHarkLink(string source, string target)
+    {
+        _builder.AppendLine(string.Format("fsutil hardlink create \"{0}\" \"{1}\"", target, source));
+        // Use Windows API CreateHardLink instead of cmd.exe
+        CreateHardLink(target, source, IntPtr.Zero);
+    }
+
+    public void Copy(string source, string target)
+    {
+        _builder.AppendLine(string.Format("copy /y \"{0}\" \"{1}\"", source, target));
+        // Use File.Copy instead of cmd.exe
+        File.Copy(source, target, true);
+    }
+
+    private void CreateFolder(string path)
+    {
+        _builder.AppendLine(string.Format("mkdir  \"{0}\"", path));
+        Directory.CreateDirectory(path);
+    }
+
+    public void GenerateLinuxSymlinkScript(IList<TorrentFileLink> links, string folderName, string baseFolder, string sourceFolder)
+    {
+        _builder = new StringBuilder();
+        _builder.AppendLine("#!/bin/bash");
+        _builder.AppendLine("#==============================================");
+        _builder.AppendLine("# Torrent Hard-Link Helper - Linux Symlink Script");
+        _builder.AppendLine("#");
+        _builder.AppendLine("# Created at " + DateTime.Now);
+        _builder.AppendLine("#==============================================");
+        _builder.AppendLine("");
+        _builder.AppendLine("# Change to the script directory");
+        _builder.AppendLine("cd \"$(dirname \"$0\")\"");
+        _builder.AppendLine("");
+
+        // Create base folder
+        var linuxFolderName = ToLinuxPath(folderName);
+        _builder.AppendLine(string.Format("mkdir -p \"{0}\"", linuxFolderName));
+        _builder.AppendLine("");
+
+        // Track directories we've already added mkdir commands for
+        var createdLinuxDirs = new HashSet<string>();
+
+        foreach (var link in links)
         {
-            this._builder = new StringBuilder();
-            this._builder.AppendLine("#!/bin/bash");
-            this._builder.AppendLine("#==============================================");
-            this._builder.AppendLine("# Torrent Hard-Link Helper - Linux Hard Link Script");
-            this._builder.AppendLine("#");
-            this._builder.AppendLine("# Created at " + DateTime.Now);
-            this._builder.AppendLine("#==============================================");
-            this._builder.AppendLine("");
-            this._builder.AppendLine("# Change to the script directory");
-            this._builder.AppendLine("cd \"$(dirname \"$0\")\"");
-            this._builder.AppendLine("");
+            if (link.LinkedFsFileInfo == null) continue;
 
-            // Create base folder
-            string linuxFolderName = ToLinuxPath(folderName);
-            this._builder.AppendLine(string.Format("mkdir -p \"{0}\"", linuxFolderName));
-            this._builder.AppendLine("");
-
-            // Track directories we've already added mkdir commands for
-            var createdLinuxDirs = new HashSet<string>();
-
-            foreach (var link in links)
+            // Create subdirectories inside base folder
+            var pathParts = link.TorrentFile.Path.Split('\\');
+            if (pathParts.Length > 1)
             {
-                if (link.LinkedFsFileInfo == null)
+                var linuxDirPath = linuxFolderName + "/" + ToLinuxPath(string.Join("\\", pathParts, 0, pathParts.Length - 1));
+
+                if (!createdLinuxDirs.Contains(linuxDirPath))
                 {
-                    continue;
+                    _builder.AppendLine(string.Format("mkdir -p \"{0}\"", linuxDirPath));
+                    createdLinuxDirs.Add(linuxDirPath);
                 }
-
-                // Create subdirectories inside base folder
-                string[] pathParts = link.TorrentFile.Path.Split('\\');
-                if (pathParts.Length > 1)
-                {
-                    string linuxDirPath = linuxFolderName + "/" + ToLinuxPath(string.Join("\\", pathParts, 0, pathParts.Length - 1));
-                    
-                    if (!createdLinuxDirs.Contains(linuxDirPath))
-                    {
-                        this._builder.AppendLine(string.Format("mkdir -p \"{0}\"", linuxDirPath));
-                        createdLinuxDirs.Add(linuxDirPath);
-                    }
-                }
-
-                // Get source path relative to source folder
-                string sourceRelative = link.LinkedFsFileInfo.FilePath.Substring(sourceFolder.Length).TrimStart('\\');
-                string sourceFolderName = Path.GetFileName(sourceFolder);
-                string linuxSourcePath = sourceFolderName + "/" + ToLinuxPath(sourceRelative);
-                string linuxTargetPath = linuxFolderName + "/" + ToLinuxPath(link.TorrentFile.Path);
-
-                this._builder.AppendLine(string.Format("ln \"{0}\" \"{1}\"", linuxSourcePath, linuxTargetPath));
             }
 
-            var utf8nobom = new UTF8Encoding(false);
-            string scriptContent = this._builder.ToString().Replace("\r\n", "\n");
-            File.WriteAllText(Path.Combine(baseFolder, folderName + "_hardlink.sh"), scriptContent, utf8nobom);
+            // Calculate relative path from target location to source file
+            var linuxTargetPath = linuxFolderName + "/" + ToLinuxPath(link.TorrentFile.Path);
+            var relativePath = GetRelativeSourcePath(link.TorrentFile.Path, link.LinkedFsFileInfo.FilePath, sourceFolder);
+
+            _builder.AppendLine(string.Format("ln -s \"{0}\" \"{1}\"", relativePath, linuxTargetPath));
         }
 
-        private string GetRelativeSourcePath(string torrentFilePath, string sourceFile, string sourceFolder)
-        {
-            // Calculate how many directories deep the target file is (add 1 for the base folder)
-            string[] pathParts = torrentFilePath.Split('\\');
-            int depth = pathParts.Length; // includes base folder level
+        var utf8nobom = new UTF8Encoding(false);
+        var scriptContent = _builder.ToString().Replace("\r\n", "\n");
+        File.WriteAllText(Path.Combine(baseFolder, folderName + "_symlink.sh"), scriptContent, utf8nobom);
+    }
 
-            // Build the relative path prefix (../ for each level)
-            StringBuilder relativePath = new StringBuilder();
-            for (int i = 0; i < depth; i++)
+    public void GenerateLinuxMoveScript(IList<TorrentFileLink> links, string folderName, string baseFolder, string sourceFolder)
+    {
+        _builder = new StringBuilder();
+        _builder.AppendLine("#!/bin/bash");
+        _builder.AppendLine("#==============================================");
+        _builder.AppendLine("# Torrent Hard-Link Helper - Linux Move Script");
+        _builder.AppendLine("#");
+        _builder.AppendLine("# Created at " + DateTime.Now);
+        _builder.AppendLine("#==============================================");
+        _builder.AppendLine("");
+        _builder.AppendLine("# Change to the script directory");
+        _builder.AppendLine("cd \"$(dirname \"$0\")\"");
+        _builder.AppendLine("");
+
+        // Create base folder
+        var linuxFolderName = ToLinuxPath(folderName);
+        _builder.AppendLine(string.Format("mkdir -p \"{0}\"", linuxFolderName));
+        _builder.AppendLine("");
+
+        // Track directories we've already added mkdir commands for
+        var createdLinuxDirs = new HashSet<string>();
+
+        foreach (var link in links)
+        {
+            if (link.LinkedFsFileInfo == null) continue;
+
+            // Create subdirectories inside base folder
+            var pathParts = link.TorrentFile.Path.Split('\\');
+            if (pathParts.Length > 1)
             {
-                relativePath.Append("../");
+                var linuxDirPath = linuxFolderName + "/" + ToLinuxPath(string.Join("\\", pathParts, 0, pathParts.Length - 1));
+
+                if (!createdLinuxDirs.Contains(linuxDirPath))
+                {
+                    _builder.AppendLine(string.Format("mkdir -p \"{0}\"", linuxDirPath));
+                    createdLinuxDirs.Add(linuxDirPath);
+                }
             }
 
-            // Get the source file path relative to source folder
-            string sourceRelative = sourceFile.Substring(sourceFolder.Length).TrimStart('\\');
-            string linuxSourceRelative = ToLinuxPath(sourceRelative);
-            
-            // Combine with source folder name
-            string sourceFolderName = Path.GetFileName(sourceFolder);
-            return relativePath.ToString() + sourceFolderName + "/" + linuxSourceRelative;
+            // Get source path relative to source folder
+            var sourceRelative = link.LinkedFsFileInfo.FilePath.Substring(sourceFolder.Length).TrimStart('\\');
+            var sourceFolderName = Path.GetFileName(sourceFolder);
+            var linuxSourcePath = sourceFolderName + "/" + ToLinuxPath(sourceRelative);
+            var linuxTargetPath = linuxFolderName + "/" + ToLinuxPath(link.TorrentFile.Path);
+
+            _builder.AppendLine(string.Format("mv \"{0}\" \"{1}\"", linuxSourcePath, linuxTargetPath));
         }
 
-        private string ToLinuxPath(string windowsPath)
+        var utf8nobom = new UTF8Encoding(false);
+        var scriptContent = _builder.ToString().Replace("\r\n", "\n");
+        File.WriteAllText(Path.Combine(baseFolder, folderName + "_move.sh"), scriptContent, utf8nobom);
+    }
+
+    public void GenerateLinuxHardlinkScript(IList<TorrentFileLink> links, string folderName, string baseFolder, string sourceFolder)
+    {
+        _builder = new StringBuilder();
+        _builder.AppendLine("#!/bin/bash");
+        _builder.AppendLine("#==============================================");
+        _builder.AppendLine("# Torrent Hard-Link Helper - Linux Hard Link Script");
+        _builder.AppendLine("#");
+        _builder.AppendLine("# Created at " + DateTime.Now);
+        _builder.AppendLine("#==============================================");
+        _builder.AppendLine("");
+        _builder.AppendLine("# Change to the script directory");
+        _builder.AppendLine("cd \"$(dirname \"$0\")\"");
+        _builder.AppendLine("");
+
+        // Create base folder
+        var linuxFolderName = ToLinuxPath(folderName);
+        _builder.AppendLine(string.Format("mkdir -p \"{0}\"", linuxFolderName));
+        _builder.AppendLine("");
+
+        // Track directories we've already added mkdir commands for
+        var createdLinuxDirs = new HashSet<string>();
+
+        foreach (var link in links)
         {
-            return windowsPath.Replace('\\', '/');
+            if (link.LinkedFsFileInfo == null) continue;
+
+            // Create subdirectories inside base folder
+            var pathParts = link.TorrentFile.Path.Split('\\');
+            if (pathParts.Length > 1)
+            {
+                var linuxDirPath = linuxFolderName + "/" + ToLinuxPath(string.Join("\\", pathParts, 0, pathParts.Length - 1));
+
+                if (!createdLinuxDirs.Contains(linuxDirPath))
+                {
+                    _builder.AppendLine(string.Format("mkdir -p \"{0}\"", linuxDirPath));
+                    createdLinuxDirs.Add(linuxDirPath);
+                }
+            }
+
+            // Get source path relative to source folder
+            var sourceRelative = link.LinkedFsFileInfo.FilePath.Substring(sourceFolder.Length).TrimStart('\\');
+            var sourceFolderName = Path.GetFileName(sourceFolder);
+            var linuxSourcePath = sourceFolderName + "/" + ToLinuxPath(sourceRelative);
+            var linuxTargetPath = linuxFolderName + "/" + ToLinuxPath(link.TorrentFile.Path);
+
+            _builder.AppendLine(string.Format("ln \"{0}\" \"{1}\"", linuxSourcePath, linuxTargetPath));
         }
+
+        var utf8nobom = new UTF8Encoding(false);
+        var scriptContent = _builder.ToString().Replace("\r\n", "\n");
+        File.WriteAllText(Path.Combine(baseFolder, folderName + "_hardlink.sh"), scriptContent, utf8nobom);
+    }
+
+    private string GetRelativeSourcePath(string torrentFilePath, string sourceFile, string sourceFolder)
+    {
+        // Calculate how many directories deep the target file is (add 1 for the base folder)
+        var pathParts = torrentFilePath.Split('\\');
+        var depth = pathParts.Length; // includes base folder level
+
+        // Build the relative path prefix (../ for each level)
+        var relativePath = new StringBuilder();
+        for (var i = 0; i < depth; i++) relativePath.Append("../");
+
+        // Get the source file path relative to source folder
+        var sourceRelative = sourceFile.Substring(sourceFolder.Length).TrimStart('\\');
+        var linuxSourceRelative = ToLinuxPath(sourceRelative);
+
+        // Combine with source folder name
+        var sourceFolderName = Path.GetFileName(sourceFolder);
+        return relativePath + sourceFolderName + "/" + linuxSourceRelative;
+    }
+
+    private string ToLinuxPath(string windowsPath)
+    {
+        return windowsPath.Replace('\\', '/');
     }
 }
