@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Text;
 using TorrentHardLinkHelper.Locate;
 
@@ -10,12 +10,7 @@ namespace TorrentHardLinkHelper.HardLink;
 public class HardLinkHelper
 {
     private StringBuilder _builder;
-
     private List<string> _createdFolders;
-
-    // Windows API for creating hard links
-    [DllImport("Kernel32.dll", CharSet = CharSet.Unicode)]
-    private static extern bool CreateHardLink(string lpFileName, string lpExistingFileName, IntPtr lpSecurityAttributes);
 
     public void HardLink(string sourceFolder, string targetParentFolder, string folderName, int copyLimitSize)
     {
@@ -32,13 +27,13 @@ public class HardLinkHelper
         if (!Directory.Exists(rootFolder)) CreateFolder(rootFolder);
         if (!Directory.Exists(targetParentFolder)) CreateFolder(targetParentFolder);
         SearchFolder(sourceFolder, rootFolder, copyLimitSize);
-        var utf8bom = new UTF8Encoding(false);
-        File.WriteAllText(Path.Combine(rootFolder, "!hard-link.cmd"), _builder.ToString(), utf8bom);
+        var utf8Bom = new UTF8Encoding(false);
+        File.WriteAllText(Path.Combine(rootFolder, "!hard-link.cmd"), _builder.ToString(), utf8Bom);
     }
 
     private void SearchFolder(string folder, string targetParentFolder, int copyLimitSize)
     {
-        if (_createdFolders == null) _createdFolders = new List<string>();
+        _createdFolders ??= [];
         if (_createdFolders.Contains(folder)) return;
         foreach (var file in Directory.GetFiles(folder))
         {
@@ -102,21 +97,49 @@ public class HardLinkHelper
 
     private void CreateHarkLink(string source, string target)
     {
-        _builder.AppendLine(string.Format("fsutil hardlink create \"{0}\" \"{1}\"", target, source));
-        // Use Windows API CreateHardLink instead of cmd.exe
-        CreateHardLink(target, source, IntPtr.Zero);
+        _builder.AppendLine($"fsutil hardlink create \"{target}\" \"{source}\"");
+        var procStartInfo =
+            new ProcessStartInfo("cmd",
+                "/c " + $"fsutil hardlink create \"{target}\" \"{source}\"")
+            {
+                // The following commands are needed to redirect the standard output.
+                // This means that it will be redirected to the Process.StandardOutput StreamReader.
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                // Do not create the black window.
+                CreateNoWindow = true
+            };
+
+        // Now we create a process, assign its ProcessStartInfo and start it
+        var proc = new Process();
+        proc.StartInfo = procStartInfo;
+        proc.Start();
     }
 
     public void Copy(string source, string target)
     {
-        _builder.AppendLine(string.Format("copy /y \"{0}\" \"{1}\"", source, target));
-        // Use File.Copy instead of cmd.exe
-        File.Copy(source, target, true);
+        _builder.AppendLine($"copy /y \"{source}\" \"{target}\"");
+        var procStartInfo =
+            new ProcessStartInfo("cmd",
+                "/c " + $"copy /y \"{source}\" \"{target}\"")
+            {
+                // The following commands are needed to redirect the standard output.
+                // This means that it will be redirected to the Process.StandardOutput StreamReader.
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                // Do not create the black window.
+                CreateNoWindow = true
+            };
+
+        // Now we create a process, assign its ProcessStartInfo and start it
+        var proc = new Process();
+        proc.StartInfo = procStartInfo;
+        proc.Start();
     }
 
     private void CreateFolder(string path)
     {
-        _builder.AppendLine(string.Format("mkdir  \"{0}\"", path));
+        _builder.AppendLine($"mkdir  \"{path}\"");
         Directory.CreateDirectory(path);
     }
 
@@ -136,7 +159,7 @@ public class HardLinkHelper
 
         // Create base folder
         var linuxFolderName = ToLinuxPath(folderName);
-        _builder.AppendLine(string.Format("mkdir -p \"{0}\"", linuxFolderName));
+        _builder.AppendLine($"mkdir -p \"{linuxFolderName}\"");
         _builder.AppendLine("");
 
         // Track directories we've already added mkdir commands for
@@ -154,7 +177,7 @@ public class HardLinkHelper
 
                 if (!createdLinuxDirs.Contains(linuxDirPath))
                 {
-                    _builder.AppendLine(string.Format("mkdir -p \"{0}\"", linuxDirPath));
+                    _builder.AppendLine($"mkdir -p \"{linuxDirPath}\"");
                     createdLinuxDirs.Add(linuxDirPath);
                 }
             }
@@ -163,12 +186,12 @@ public class HardLinkHelper
             var linuxTargetPath = linuxFolderName + "/" + ToLinuxPath(link.TorrentFile.Path);
             var relativePath = GetRelativeSourcePath(link.TorrentFile.Path, link.LinkedFsFileInfo.FilePath, sourceFolder);
 
-            _builder.AppendLine(string.Format("ln -s \"{0}\" \"{1}\"", relativePath, linuxTargetPath));
+            _builder.AppendLine($"ln -s \"{relativePath}\" \"{linuxTargetPath}\"");
         }
 
-        var utf8nobom = new UTF8Encoding(false);
+        var utf8Nobom = new UTF8Encoding(false);
         var scriptContent = _builder.ToString().Replace("\r\n", "\n");
-        File.WriteAllText(Path.Combine(baseFolder, folderName + "_symlink.sh"), scriptContent, utf8nobom);
+        File.WriteAllText(Path.Combine(baseFolder, folderName + "_symlink.sh"), scriptContent, utf8Nobom);
     }
 
     public void GenerateLinuxMoveScript(IList<TorrentFileLink> links, string folderName, string baseFolder, string sourceFolder)
@@ -187,7 +210,7 @@ public class HardLinkHelper
 
         // Create base folder
         var linuxFolderName = ToLinuxPath(folderName);
-        _builder.AppendLine(string.Format("mkdir -p \"{0}\"", linuxFolderName));
+        _builder.AppendLine($"mkdir -p \"{linuxFolderName}\"");
         _builder.AppendLine("");
 
         // Track directories we've already added mkdir commands for
@@ -205,7 +228,7 @@ public class HardLinkHelper
 
                 if (!createdLinuxDirs.Contains(linuxDirPath))
                 {
-                    _builder.AppendLine(string.Format("mkdir -p \"{0}\"", linuxDirPath));
+                    _builder.AppendLine($"mkdir -p \"{linuxDirPath}\"");
                     createdLinuxDirs.Add(linuxDirPath);
                 }
             }
@@ -216,12 +239,12 @@ public class HardLinkHelper
             var linuxSourcePath = sourceFolderName + "/" + ToLinuxPath(sourceRelative);
             var linuxTargetPath = linuxFolderName + "/" + ToLinuxPath(link.TorrentFile.Path);
 
-            _builder.AppendLine(string.Format("mv \"{0}\" \"{1}\"", linuxSourcePath, linuxTargetPath));
+            _builder.AppendLine($"mv \"{linuxSourcePath}\" \"{linuxTargetPath}\"");
         }
 
-        var utf8nobom = new UTF8Encoding(false);
+        var utf8Nobom = new UTF8Encoding(false);
         var scriptContent = _builder.ToString().Replace("\r\n", "\n");
-        File.WriteAllText(Path.Combine(baseFolder, folderName + "_move.sh"), scriptContent, utf8nobom);
+        File.WriteAllText(Path.Combine(baseFolder, folderName + "_move.sh"), scriptContent, utf8Nobom);
     }
 
     public void GenerateLinuxHardlinkScript(IList<TorrentFileLink> links, string folderName, string baseFolder, string sourceFolder)
@@ -240,7 +263,7 @@ public class HardLinkHelper
 
         // Create base folder
         var linuxFolderName = ToLinuxPath(folderName);
-        _builder.AppendLine(string.Format("mkdir -p \"{0}\"", linuxFolderName));
+        _builder.AppendLine($"mkdir -p \"{linuxFolderName}\"");
         _builder.AppendLine("");
 
         // Track directories we've already added mkdir commands for
@@ -258,23 +281,23 @@ public class HardLinkHelper
 
                 if (!createdLinuxDirs.Contains(linuxDirPath))
                 {
-                    _builder.AppendLine(string.Format("mkdir -p \"{0}\"", linuxDirPath));
+                    _builder.AppendLine($"mkdir -p \"{linuxDirPath}\"");
                     createdLinuxDirs.Add(linuxDirPath);
                 }
             }
 
             // Get source path relative to source folder
-            var sourceRelative = link.LinkedFsFileInfo.FilePath.Substring(sourceFolder.Length).TrimStart('\\');
+            var sourceRelative = link.LinkedFsFileInfo.FilePath[sourceFolder.Length..].TrimStart('\\');
             var sourceFolderName = Path.GetFileName(sourceFolder);
             var linuxSourcePath = sourceFolderName + "/" + ToLinuxPath(sourceRelative);
             var linuxTargetPath = linuxFolderName + "/" + ToLinuxPath(link.TorrentFile.Path);
 
-            _builder.AppendLine(string.Format("ln \"{0}\" \"{1}\"", linuxSourcePath, linuxTargetPath));
+            _builder.AppendLine($"ln \"{linuxSourcePath}\" \"{linuxTargetPath}\"");
         }
 
-        var utf8nobom = new UTF8Encoding(false);
+        var utf8Nobom = new UTF8Encoding(false);
         var scriptContent = _builder.ToString().Replace("\r\n", "\n");
-        File.WriteAllText(Path.Combine(baseFolder, folderName + "_hardlink.sh"), scriptContent, utf8nobom);
+        File.WriteAllText(Path.Combine(baseFolder, folderName + "_hardlink.sh"), scriptContent, utf8Nobom);
     }
 
     private string GetRelativeSourcePath(string torrentFilePath, string sourceFile, string sourceFolder)
