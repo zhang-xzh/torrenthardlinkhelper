@@ -1,4 +1,6 @@
-﻿using System.Windows;
+using System.Globalization;
+using System.Threading;
+using System.Windows;
 
 namespace TorrentHardLinkHelper;
 
@@ -11,6 +13,10 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        // 设置默认语言为中文
+        Thread.CurrentThread.CurrentUICulture = new CultureInfo("zh-CN");
+        Thread.CurrentThread.CurrentCulture = new CultureInfo("zh-CN");
+
         base.OnStartup(e);
         StartupArgs = e.Args;
     }

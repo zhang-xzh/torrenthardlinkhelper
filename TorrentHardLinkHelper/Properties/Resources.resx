@@ -1,101 +1,55 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!-- 
-    Microsoft ResX Schema 
-    
-    Version 2.0
-    
-    The primary goals of this format is to allow a simple XML format 
-    that is mostly human readable. The generation and parsing of the 
-    various data types are done through the TypeConverter classes 
-    associated with the data types.
-    
-    Example:
-    
-    ... ado.net/XML headers & schema ...
-    <resheader name="resmimetype">text/microsoft-resx</resheader>
-    <resheader name="version">2.0</resheader>
-    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
-    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
-    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
-    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
-    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
-        <value>[base64 mime encoded serialized .NET Framework object]</value>
-    </data>
-    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
-        <comment>This is a comment</comment>
-    </data>
-                
-    There are any number of "resheader" rows that contain simple 
-    name/value pairs.
-    
-    Each data row contains a name, and value. The row also contains a 
-    type or mimetype. Type corresponds to a .NET class that support 
-    text/value conversion through the TypeConverter architecture. 
-    Classes that don't support this are serialized and stored with the 
-    mimetype set.
-    
-    The mimetype is used for serialized objects, and tells the 
-    ResXResourceReader how to depersist the object. This is currently not 
-    extensible. For a given mimetype the value must be set accordingly:
-    
-    Note - application/x-microsoft.net.object.binary.base64 is the format 
-    that the ResXResourceWriter will generate, however the reader can 
-    read any of the formats listed below.
-    
-    mimetype: application/x-microsoft.net.object.binary.base64
-    value   : The object must be serialized with 
-            : System.Serialization.Formatters.Binary.BinaryFormatter
-            : and then encoded with base64 encoding.
-    
-    mimetype: application/x-microsoft.net.object.soap.base64
-    value   : The object must be serialized with 
-            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
-            : and then encoded with base64 encoding.
+  <!--
+    Microsoft ResX Schema
 
-    mimetype: application/x-microsoft.net.object.bytearray.base64
-    value   : The object must be serialized into a byte array 
-            : using a System.ComponentModel.TypeConverter
-            : and then encoded with base64 encoding.
-    -->
-  <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root" xmlns="">
+    Version 2.0
+
+    The primary goals of this format is to allow a simple XML format
+    that is mostly human readable. The generation and parsing of the
+    various data types are done through the TypeConverter classes
+    associated with the data types.
+  -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string"/>
-              <xsd:attribute name="type" type="xsd:string"/>
-              <xsd:attribute name="mimetype" type="xsd:string"/>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="assembly">
             <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string"/>
-              <xsd:attribute name="name" type="xsd:string"/>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1"/>
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
             </xsd:complexType>
           </xsd:element>
         </xsd:choice>
@@ -109,9 +63,175 @@
     <value>2.0</value>
   </resheader>
   <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
-    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+
+  <!-- Window Titles -->
+  <data name="MainWindowTitle" xml:space="preserve">
+    <value>Torrent HardLink Helper v1.0</value>
+  </data>
+  <data name="HardLinkToolWindowTitle" xml:space="preserve">
+    <value>HardLinkTool</value>
+  </data>
+
+  <!-- Labels -->
+  <data name="Label_TorrentFile" xml:space="preserve">
+    <value>Torrent File:</value>
+  </data>
+  <data name="Label_SourceFolder" xml:space="preserve">
+    <value>Source Folder:</value>
+  </data>
+  <data name="Label_OutputBaseFolder" xml:space="preserve">
+    <value>Output BaseFolder:</value>
+  </data>
+  <data name="Label_SourceFiles" xml:space="preserve">
+    <value>Source Files</value>
+  </data>
+  <data name="Label_TorrentFiles" xml:space="preserve">
+    <value>Torrent Files</value>
+  </data>
+  <data name="Label_OutputFolderName" xml:space="preserve">
+    <value>Output Folder Name:</value>
+  </data>
+  <data name="Label_KB" xml:space="preserve">
+    <value>KB</value>
+  </data>
+  <data name="Label_TargetParentFolder" xml:space="preserve">
+    <value>Target Parent Folder</value>
+  </data>
+  <data name="Label_TargetFolderName" xml:space="preserve">
+    <value>Target Folder Name</value>
+  </data>
+
+  <!-- Buttons -->
+  <data name="Button_Select" xml:space="preserve">
+    <value>Select</value>
+  </data>
+  <data name="Button_Default" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="Button_ExpandAll" xml:space="preserve">
+    <value>Expand All</value>
+  </data>
+  <data name="Button_CollapseAll" xml:space="preserve">
+    <value>Collapse All</value>
+  </data>
+  <data name="Button_HardLinkTool" xml:space="preserve">
+    <value>Hard-Link Tool</value>
+  </data>
+  <data name="Button_Analyse" xml:space="preserve">
+    <value>Analyse</value>
+  </data>
+  <data name="Button_HardLink" xml:space="preserve">
+    <value>Hard-Link</value>
+  </data>
+  <data name="Button_SoftLinkLinux" xml:space="preserve">
+    <value>Soft-Link Linux</value>
+  </data>
+  <data name="Button_HardLinkLinux" xml:space="preserve">
+    <value>Hard-Link Linux</value>
+  </data>
+  <data name="Button_MoveLinux" xml:space="preserve">
+    <value>Move Linux</value>
+  </data>
+
+  <!-- Output Name Types -->
+  <data name="OutputNameType_TorrentTitle" xml:space="preserve">
+    <value>Torrent Title</value>
+  </data>
+  <data name="OutputNameType_TorrentName" xml:space="preserve">
+    <value>Torrent Name</value>
+  </data>
+  <data name="OutputNameType_Custom" xml:space="preserve">
+    <value>Custom</value>
+  </data>
+
+  <!-- Status Messages -->
+  <data name="Status_Ready" xml:space="preserve">
+    <value>Ready.</value>
+  </data>
+  <data name="Status_Locating" xml:space="preserve">
+    <value>Locating... This may take several minutes.</value>
+  </data>
+  <data name="Status_LocateSuccess" xml:space="preserve">
+    <value>Successfully located {0} of {1} file(s). Matched {2} of {3} file(s) on disk.</value>
+  </data>
+  <data name="Status_LoadTorrentFailed" xml:space="preserve">
+    <value>Load torrent failed, exception message: {0}</value>
+  </data>
+  <data name="Status_LinkFailedDifferentDrive" xml:space="preserve">
+    <value>Link failed, the output basefolder and the source folder must be in the same drive!</value>
+  </data>
+  <data name="Status_Linking" xml:space="preserve">
+    <value>Linking...</value>
+  </data>
+  <data name="Status_Done" xml:space="preserve">
+    <value>Done.</value>
+  </data>
+  <data name="Status_GeneratingLinuxSymlinkScript" xml:space="preserve">
+    <value>Generating Linux symlink script...</value>
+  </data>
+  <data name="Status_ScriptSavedSymlink" xml:space="preserve">
+    <value>Done. Script saved as {0}_symlink.sh</value>
+  </data>
+  <data name="Status_GeneratingLinuxHardlinkScript" xml:space="preserve">
+    <value>Generating Linux hard link script...</value>
+  </data>
+  <data name="Status_ScriptSavedHardlink" xml:space="preserve">
+    <value>Done. Script saved as {0}_hardlink.sh</value>
+  </data>
+  <data name="Status_GeneratingLinuxMoveScript" xml:space="preserve">
+    <value>Generating Linux move script...</value>
+  </data>
+  <data name="Status_ScriptSavedMove" xml:space="preserve">
+    <value>Done. Script saved as {0}_move.sh</value>
+  </data>
+
+  <!-- Dialog Messages -->
+  <data name="DialogTitle_SelectTorrent" xml:space="preserve">
+    <value>Select one torrent to open</value>
+  </data>
+  <data name="Dialog_Filter_TorrentFiles" xml:space="preserve">
+    <value>Torrent Files|*.torrent</value>
+  </data>
+  <data name="DialogTitle_Confirm" xml:space="preserve">
+    <value>Confirm</value>
+  </data>
+  <data name="DialogMessage_HardLinkAnyway" xml:space="preserve">
+    <value>{0} files unlocated, hard link anyway?</value>
+  </data>
+  <data name="DialogMessage_GenerateScriptAnyway" xml:space="preserve">
+    <value>{0} files unlocated, generate script anyway?</value>
+  </data>
+
+  <!-- Tooltips/Descriptions -->
+  <data name="Description_HardLinkTool" xml:space="preserve">
+    <value>This tool helps to create a copy of a folder, the size of file below 1M will be copied, others will be hard-linked.</value>
+  </data>
+  <data name="Description_CopyLimit" xml:space="preserve">
+    <value>Just COPY not Hard-Link when filesize is below:</value>
+  </data>
+  <data name="Description_COPY" xml:space="preserve">
+    <value>COPY</value>
+  </data>
+  <data name="Description_Just" xml:space="preserve">
+    <value>Just</value>
+  </data>
+
+
+  <!-- File Extensions -->
+  <data name="FileExtension_Torrent" xml:space="preserve">
+    <value>.torrent</value>
+  </data>
+
+  <!-- Process -->
+  <data name="Process_Explorer" xml:space="preserve">
+    <value>explorer.exe</value>
+  </data>
+  <data name="Process_CMD" xml:space="preserve">
+    <value>cmd</value>
+  </data>
 </root>

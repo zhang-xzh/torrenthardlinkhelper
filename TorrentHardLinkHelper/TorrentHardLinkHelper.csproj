@@ -10,6 +10,7 @@
     <Nullable>disable</Nullable>
     <ApplicationIcon>ico2.ico</ApplicationIcon>
     <LongPathAware>true</LongPathAware>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
   </PropertyGroup>
 
   <ItemGroup>

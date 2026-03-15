@@ -11,6 +11,7 @@ using Ookii.Dialogs.Wpf;
 using TorrentHardLinkHelper.HardLink;
 using TorrentHardLinkHelper.Locate;
 using TorrentHardLinkHelper.Models;
+using TorrentHardLinkHelper.Properties;
 using TorrentHardLinkHelper.Torrents;
 using TorrentHardLinkHelper.Views;
 
@@ -18,7 +19,7 @@ namespace TorrentHardLinkHelper.ViewModels;
 
 public class MainViewModel : ObservableObject
 {
-    private static readonly IList<string> _outputNameTypes = new[] { "Torrent Title", "Torrent Name", "Custom" };
+    private static readonly IList<string> _outputNameTypes = new[] { Resources.OutputNameType_TorrentTitle, Resources.OutputNameType_TorrentName, Resources.OutputNameType_Custom };
     private Style _collapseAllStyle;
     private int _copyLimitSize;
     private int _curProcess;
@@ -48,7 +49,7 @@ public class MainViewModel : ObservableObject
         InitStyles();
         IsOutputNameReadonly = true;
         CopyLimitSize = 1024;
-        UpdateStatusFormat("Ready.");
+        UpdateStatusFormat(Resources.Status_Ready);
     }
 
     private void InitCommands()
@@ -99,8 +100,8 @@ public class MainViewModel : ObservableObject
     private void SelectTorrentFile()
     {
         var dialog = new VistaOpenFileDialog();
-        dialog.Title = "Select one torrent to open";
-        dialog.Filter = "Torrent Files|*.torrent";
+        dialog.Title = Resources.DialogTitle_SelectTorrent;
+        dialog.Filter = Resources.Dialog_Filter_TorrentFiles;
         dialog.Multiselect = false;
         dialog.CheckFileExists = true;
         dialog.ShowDialog();
@@ -153,7 +154,7 @@ public class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            UpdateStatusFormat("Load torrent failed, exception message: {0}", ex.Message);
+            UpdateStatusFormat(Resources.Status_LoadTorrentFailed, ex.Message);
         }
     }
 
@@ -201,7 +202,7 @@ public class MainViewModel : ObservableObject
 
     private void Analyse()
     {
-        UpdateStatusFormat("Locating... This may take several minutes.");
+        UpdateStatusFormat(Resources.Status_Locating);
         var func = new Func<LocateResult>(Locate);
         func.BeginInvoke(AnalyseFinish, func);
     }
@@ -213,7 +214,7 @@ public class MainViewModel : ObservableObject
         {
             var result = func.EndInvoke(ar);
 
-            UpdateStatusFormat("Successfully located {0} of {1} file(s). Matched {2} of {3} file(s) on disk.",
+            UpdateStatusFormat(Resources.Status_LocateSuccess,
                 result.LocatedCount,
                 result.LocatedCount + result.UnlocatedCount,
                 result.TorrentFileLinks.Where(c => c.State == LinkState.Located)
@@ -258,70 +259,69 @@ public class MainViewModel : ObservableObject
     {
         if (Path.GetPathRoot(_outputBaseFolder) != Path.GetPathRoot(_sourceFolder))
         {
-            UpdateStatusFormat(
-                "Link failed, the output basefolder and the source folder must be in the same drive!");
+            UpdateStatusFormat(Resources.Status_LinkFailedDifferentDrive);
             return;
         }
 
         if (_unlocatedCount != 0)
         {
-            var result = MessageBox.Show(_unlocatedCount + " files unlocated, hard link anyway?", "Confirm", MessageBoxButton.OKCancel, MessageBoxImage.Warning, MessageBoxResult.Cancel);
+            var result = MessageBox.Show(string.Format(Resources.DialogMessage_HardLinkAnyway, _unlocatedCount), Resources.DialogTitle_Confirm, MessageBoxButton.OKCancel, MessageBoxImage.Warning, MessageBoxResult.Cancel);
             if (result != MessageBoxResult.OK) return;
         }
 
-        UpdateStatusFormat("Linking...");
+        UpdateStatusFormat(Resources.Status_Linking);
         var helper = new HardLinkHelper();
         helper.HardLink(_locateResult.TorrentFileLinks, _copyLimitSize, _outputName,
             _outputBaseFolder);
         var targetTorrentFile = Path.Combine(Path.Combine(_outputBaseFolder, _outputName), Path.GetFileName(_torrentFile));
         helper.Copy(_torrentFile, targetTorrentFile);
-        UpdateStatusFormat("Done.");
-        Process.Start("explorer.exe", Path.Combine(_outputBaseFolder, _outputName));
+        UpdateStatusFormat(Resources.Status_Done);
+        Process.Start(Resources.Process_Explorer, Path.Combine(_outputBaseFolder, _outputName));
     }
 
     private void LinkLinux()
     {
         if (_unlocatedCount != 0)
         {
-            var result = MessageBox.Show(_unlocatedCount + " files unlocated, generate script anyway?", "Confirm", MessageBoxButton.OKCancel, MessageBoxImage.Warning, MessageBoxResult.Cancel);
+            var result = MessageBox.Show(string.Format(Resources.DialogMessage_GenerateScriptAnyway, _unlocatedCount), Resources.DialogTitle_Confirm, MessageBoxButton.OKCancel, MessageBoxImage.Warning, MessageBoxResult.Cancel);
             if (result != MessageBoxResult.OK) return;
         }
 
-        UpdateStatusFormat("Generating Linux symlink script...");
+        UpdateStatusFormat(Resources.Status_GeneratingLinuxSymlinkScript);
         var helper = new HardLinkHelper();
         helper.GenerateLinuxSymlinkScript(_locateResult.TorrentFileLinks, _outputName,
             _outputBaseFolder, _sourceFolder);
-        UpdateStatusFormat("Done. Script saved as " + _outputName + "_symlink.sh");
+        UpdateStatusFormat(Resources.Status_ScriptSavedSymlink, _outputName);
     }
 
     private void HardlinkLinux()
     {
         if (_unlocatedCount != 0)
         {
-            var result = MessageBox.Show(_unlocatedCount + " files unlocated, generate script anyway?", "Confirm", MessageBoxButton.OKCancel, MessageBoxImage.Warning, MessageBoxResult.Cancel);
+            var result = MessageBox.Show(string.Format(Resources.DialogMessage_GenerateScriptAnyway, _unlocatedCount), Resources.DialogTitle_Confirm, MessageBoxButton.OKCancel, MessageBoxImage.Warning, MessageBoxResult.Cancel);
             if (result != MessageBoxResult.OK) return;
         }
 
-        UpdateStatusFormat("Generating Linux hard link script...");
+        UpdateStatusFormat(Resources.Status_GeneratingLinuxHardlinkScript);
         var helper = new HardLinkHelper();
         helper.GenerateLinuxHardlinkScript(_locateResult.TorrentFileLinks, _outputName,
             _outputBaseFolder, _sourceFolder);
-        UpdateStatusFormat("Done. Script saved as " + _outputName + "_hardlink.sh");
+        UpdateStatusFormat(Resources.Status_ScriptSavedHardlink, _outputName);
     }
 
     private void MoveLinux()
     {
         if (_unlocatedCount != 0)
         {
-            var result = MessageBox.Show(_unlocatedCount + " files unlocated, generate script anyway?", "Confirm", MessageBoxButton.OKCancel, MessageBoxImage.Warning, MessageBoxResult.Cancel);
+            var result = MessageBox.Show(string.Format(Resources.DialogMessage_GenerateScriptAnyway, _unlocatedCount), Resources.DialogTitle_Confirm, MessageBoxButton.OKCancel, MessageBoxImage.Warning, MessageBoxResult.Cancel);
             if (result != MessageBoxResult.OK) return;
         }
 
-        UpdateStatusFormat("Generating Linux move script...");
+        UpdateStatusFormat(Resources.Status_GeneratingLinuxMoveScript);
         var helper = new HardLinkHelper();
         helper.GenerateLinuxMoveScript(_locateResult.TorrentFileLinks, _outputName,
             _outputBaseFolder, _sourceFolder);
-        UpdateStatusFormat("Done. Script saved as " + _outputName + "_move.sh");
+        UpdateStatusFormat(Resources.Status_ScriptSavedMove, _outputName);
     }
 
     #region Properties
