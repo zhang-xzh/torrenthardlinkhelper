@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using TorrentHardLinkHelper.Locate;
 
@@ -11,6 +13,9 @@ public class HardLinkHelper
 {
     private StringBuilder _builder;
     private List<string> _createdFolders;
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern bool CreateHardLink(string lpFileName, string lpExistingFileName, IntPtr lpSecurityAttributes);
 
     public void HardLink(string sourceFolder, string targetParentFolder, string folderName, int copyLimitSize)
     {
@@ -27,7 +32,7 @@ public class HardLinkHelper
         if (!Directory.Exists(rootFolder)) CreateFolder(rootFolder);
         if (!Directory.Exists(targetParentFolder)) CreateFolder(targetParentFolder);
         SearchFolder(sourceFolder, rootFolder, copyLimitSize);
-        var utf8Bom = new UTF8Encoding(false);
+        var utf8Bom = new UTF8Encoding(true);
         File.WriteAllText(Path.Combine(rootFolder, "!hard-link.cmd"), _builder.ToString(), utf8Bom);
     }
 
@@ -92,49 +97,28 @@ public class HardLinkHelper
                 Copy(link.LinkedFsFileInfo.FilePath, targetFile);
         }
 
-        File.WriteAllText(Path.Combine(rootFolder, "!hard-link.cmd"), _builder.ToString(), Encoding.UTF8);
+        var utf8WithBom = new UTF8Encoding(true);
+        File.WriteAllText(Path.Combine(rootFolder, "!hard-link.cmd"), _builder.ToString(), utf8WithBom);
     }
 
     private void CreateHarkLink(string source, string target)
     {
         _builder.AppendLine($"fsutil hardlink create \"{target}\" \"{source}\"");
-        var procStartInfo =
-            new ProcessStartInfo("cmd",
-                "/c " + $"fsutil hardlink create \"{target}\" \"{source}\"")
-            {
-                // The following commands are needed to redirect the standard output.
-                // This means that it will be redirected to the Process.StandardOutput StreamReader.
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                // Do not create the black window.
-                CreateNoWindow = true
-            };
 
-        // Now we create a process, assign its ProcessStartInfo and start it
-        var proc = new Process();
-        proc.StartInfo = procStartInfo;
-        proc.Start();
+        // Use Windows API instead of command line
+        if (!CreateHardLink(target, source, IntPtr.Zero))
+        {
+            throw new Win32Exception(Marshal.GetLastWin32Error(),
+                $"Failed to create hard link from '{source}' to '{target}'");
+        }
     }
 
     public void Copy(string source, string target)
     {
         _builder.AppendLine($"copy /y \"{source}\" \"{target}\"");
-        var procStartInfo =
-            new ProcessStartInfo("cmd",
-                "/c " + $"copy /y \"{source}\" \"{target}\"")
-            {
-                // The following commands are needed to redirect the standard output.
-                // This means that it will be redirected to the Process.StandardOutput StreamReader.
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                // Do not create the black window.
-                CreateNoWindow = true
-            };
 
-        // Now we create a process, assign its ProcessStartInfo and start it
-        var proc = new Process();
-        proc.StartInfo = procStartInfo;
-        proc.Start();
+        // Use .NET File.Copy instead of command line
+        File.Copy(source, target, overwrite: true);
     }
 
     private void CreateFolder(string path)
