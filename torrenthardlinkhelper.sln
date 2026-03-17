@@ -1,0 +1,36 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TorrentHardLinkHelper", "TorrentHardLinkHelper\TorrentHardLinkHelper.csproj", "{0E75A83C-F2EF-E8DA-AE83-1383C35E5B6F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TorrentHardLinkHelper.Library", "TorrentHardLinkHelper.Library\TorrentHardLinkHelper.Library.csproj", "{DF77C633-3151-E76E-669E-A6AE5B959218}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TorrentHardLinkHelper.Test", "TorrentHardLinkHelper.Test\TorrentHardLinkHelper.Test.csproj", "{BDBF8B54-85ED-39CE-E5DF-FD1BE95B247C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0E75A83C-F2EF-E8DA-AE83-1383C35E5B6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E75A83C-F2EF-E8DA-AE83-1383C35E5B6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E75A83C-F2EF-E8DA-AE83-1383C35E5B6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E75A83C-F2EF-E8DA-AE83-1383C35E5B6F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF77C633-3151-E76E-669E-A6AE5B959218}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF77C633-3151-E76E-669E-A6AE5B959218}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF77C633-3151-E76E-669E-A6AE5B959218}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF77C633-3151-E76E-669E-A6AE5B959218}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDBF8B54-85ED-39CE-E5DF-FD1BE95B247C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDBF8B54-85ED-39CE-E5DF-FD1BE95B247C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDBF8B54-85ED-39CE-E5DF-FD1BE95B247C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDBF8B54-85ED-39CE-E5DF-FD1BE95B247C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E56B74F2-D45B-421F-96A2-BFF3836A02EA}
+	EndGlobalSection
+EndGlobal
